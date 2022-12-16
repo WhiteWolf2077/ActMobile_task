@@ -31,7 +31,9 @@ def playTrailer():
     trailer.click()
     print("The trailer being played is:", trailer.text)
     time.sleep(5)
+    seekTime()
 
+def seekTime():
     #Proof that trailer is being played(Seeks the time of the trailer)
     a = ActionChains(driver)
     WebDriverWait(driver, 10).until(lambda x: x.find_element(By.CLASS_NAME,"VideoContainer").is_displayed())
