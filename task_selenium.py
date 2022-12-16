@@ -3,51 +3,69 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.chrome.options import Options
+import time
+import random
 
-driver = webdriver.Chrome('/home/yamato/Documents/chromdriver/chromedriver')
+chrome_options = Options()
+chrome_options.add_experimental_option("detach", True)
 
-
-### Hitting up the netflix base url
-driver.get("https://www.netflix.com/in/")
-
-### Location to the browse menu for netflix
-watchList = "/html/body/div[1]/div/div/div/div/div/div[3]/div[1]/div[2]/ul/li[15]/a/span"
-
-### Location to the Stranger things main page
-stranger_things = "/html/body/div[1]/div/div[2]/main/section[2]/div/ul/li[2]/a/img"
-
-### Location to the play trailer button
-#play_trailer = "/html/body/div[1]/div/div[2]/section[3]/div[2]/ul/li[1]/div/button/span[2]"
-
-### Browse page
-driver.find_element_by_xpath(watchList).click()
-
-### Stranger things page
-driver.find_element_by_xpath(stranger_things).click()
+driver = webdriver.Chrome("/home/yamato/Documents/chromdriver/chromedriver", options=chrome_options)
 
 
-### Gets the Synopsis
-text = driver.find_element_by_class_name("title-info-synopsis").text
+def playTrailer():
+    
+    ## Synopsis
+    text = driver.find_element(By.CLASS_NAME,"title-info-synopsis").text
+    print("Description: ",text,"\n")
 
+    ## Casts
+    cast = driver.find_elements(By.CLASS_NAME,"item-cast")
+    for i in cast:
+        print(i.text)
+    print("\n")
 
-print("Description: ",text,"\n")
-
-### Get the list of casts
-print("StarCast:\n")
-cast = driver.find_elements_by_class_name("item-cast")
-for i in cast:
-    print(i.text)
-
-print("\n")
-
-
-### Playing the trailer
-try:
-    trailer = driver.find_element_by_class_name("additional-video-title")
+    #Trailer Play
+    trailer = driver.find_element(By.CLASS_NAME,"additional-video-title")
     trailer.click()
     print("The trailer being played is:", trailer.text)
-except:
-    print ("An error occured")
+    time.sleep(5)
 
+    #Proof that trailer is being played(Seeks the time of the trailer)
+    a = ActionChains(driver)
+    WebDriverWait(driver, 10).until(lambda x: x.find_element(By.CLASS_NAME,"VideoContainer").is_displayed())
+    m = driver.find_element(By.CLASS_NAME,"VideoContainer")
+    a.move_to_element(m).click().perform()
+    WebDriverWait(driver, 10).until(lambda x: x.find_element(By.CLASS_NAME,'scrubber-head').is_displayed())
+    while True:
+        scurb = driver.find_element_by_class_name('scrubber-head').get_attribute('aria-valuetext').split(" ")
+        print("seek time: ", scurb)
+        time.sleep(1)
+    
+  
 
-#driver.close()
+def goToTrailerPage():
+
+    ### Hitting up the netflix base url
+    driver.get("https://www.netflix.com/in/")
+    
+    ### Location to the browse menu for netflix
+    watchList = "/html/body/div[1]/div/div/div/div/div/div[3]/div[1]/div[2]/ul/li[15]/a/span"
+    
+    ### Location to the Stranger things main page
+    trailerPage = "/html/body/div[1]/div/div[2]/main/section[{l}]/div/ul/li[2]/a/img".format(l = random.randint(2, 10))
+
+    ### Browse page
+    driver.find_element(By.XPATH,watchList).click()
+
+    ### Trailer page
+    driver.find_element(By.XPATH,trailerPage).click()
+    return
+    
+
+if __name__ == "__main__":
+
+    goToTrailerPage()
+    playTrailer()
+    
